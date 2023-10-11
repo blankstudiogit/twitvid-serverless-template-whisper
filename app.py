@@ -6,6 +6,8 @@ from accelerate import init_empty_weights, load_checkpoint_and_dispatch
 import torchaudio
 import requests
 from typing import Tuple, List
+import time
+import numpy as np
 
 class WhisperWord:
     def __init__(self, word: str, start: int, end: int, probability: float):
