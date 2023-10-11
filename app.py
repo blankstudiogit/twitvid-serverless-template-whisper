@@ -93,14 +93,7 @@ def handler(context: dict, request: Request) -> Response:
         "language": None,
         "patience": None,
         "suppress_tokens": "-1",
-        "initial_prompt": None,
-        "condition_on_previous_text": True,
-        "compression_ratio_threshold": 2.4,
-        "logprob_threshold": -1.0,
-        "no_speech_threshold": 0.6,
-        "word_timestamps": True,
-        "prepend_punctuations": "\"'“¿([{-",
-        "append_punctuations": "\"'.。,，!！?？:：”)]}、"
+        "initial_prompt": None
     }
 
     generated_ids = model.generate(inputs=input_features, **args)
