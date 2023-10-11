@@ -88,14 +88,6 @@ def handler(context: dict, request: Request) -> Response:
 
     # run inference on the sample
     model = context.get("model")
-    # Run the model
-    # args = {
-    #     "language": None,
-    #     "patience": None,
-    #     "suppress_tokens": "-1",
-    #     "initial_prompt": None
-    # }
-
     generated_ids = model.generate(inputs=input_features)
     
     # convert the generated ids back to text
@@ -128,7 +120,7 @@ def word_start_end_pairs(text: str) -> List[Tuple[str, Tuple[int, int]]]:
     # Use regular expression to find all words in the text
     words = re.findall(r'\b\w+\b', text)
     word_start_end_pairs = [(word, (text.find(word), text.find(word) + len(word))) for word in words]
-    return word_start_end_pairs
+    return [(word, (start, end), i) for i, (word, (start, end)) in enumerate(word_start_end_pairs)]
 
 # Implement a function to download file from the given URL
 def download_file_from_url(url, file_path):
