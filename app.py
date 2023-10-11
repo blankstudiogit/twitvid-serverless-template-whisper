@@ -117,10 +117,9 @@ def handler(context: dict, request: Request) -> Response:
 import re
 
 def word_start_end_pairs(text: str) -> List[Tuple[str, Tuple[int, int]]]:
-    # Use regular expression to find all words in the text
     words = re.findall(r'\b\w+\b', text)
     word_start_end_pairs = [(word, (text.find(word), text.find(word) + len(word))) for word in words]
-    return [(word, (start, end), i) for i, (word, (start, end)) in enumerate(word_start_end_pairs)]
+    return [(word, (start, end)) for word, (start, end) in word_start_end_pairs]
 
 # Implement a function to download file from the given URL
 def download_file_from_url(url, file_path):
