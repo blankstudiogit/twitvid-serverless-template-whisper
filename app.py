@@ -39,7 +39,7 @@ class WhisperSegment:
             "start": self.start,
             "end": self.end,
             "text": self.text,
-            "words": [word.to_dict() for word in self.words]  # Convert WhisperWord objects to dictionaries
+            "words": [{"word": word.word, "start": word.start, "end": word.end, "probability": word.probability} for word in self.words]
         }
 
 
