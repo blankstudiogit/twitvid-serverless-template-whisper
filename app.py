@@ -7,6 +7,23 @@ import torchaudio
 import requests
 from typing import Tuple, List
 
+class WhisperWord:
+    def __init__(self, word: str, start: int, end: int, probability: float):
+        self.word = word
+        self.start = start
+        self.end = end
+        self.probability = probability
+
+class WhisperSegment:
+    def __init__(self, id: int, start: int, end: int, text: str, words: List[WhisperWord] = None):
+        self.id = id
+        self.start = start
+        self.end = end
+        self.text = text
+        self.words = words or []  # Initialize words as an empty list if not provided
+
+    def add_word(self, word: WhisperWord):
+        self.words.append(word)
 
 # create a new Potassium app
 app = Potassium("my_app")
