@@ -5,7 +5,8 @@ from transformers import AutoProcessor, WhisperForConditionalGeneration, Whisper
 from accelerate import init_empty_weights, load_checkpoint_and_dispatch
 import torchaudio
 import requests
-from typing import List
+from typing import Tuple, List
+
 
 # create a new Potassium app
 app = Potassium("my_app")
