@@ -1,11 +1,10 @@
 from potassium import Potassium, Request, Response
 import torch
-import boto3
 import os
-
 from transformers import AutoProcessor, WhisperForConditionalGeneration, WhisperConfig
 from accelerate import init_empty_weights, load_checkpoint_and_dispatch
 import torchaudio
+import requests
 
 # create a new Potassium app
 app = Potassium("my_app")
@@ -13,7 +12,6 @@ app = Potassium("my_app")
 # @app.init runs at startup, and loads models into the app's context
 @app.init
 def init():
-
     config = WhisperConfig.from_pretrained("openai/whisper-base")
     processor = AutoProcessor.from_pretrained("openai/whisper-base")
     
@@ -24,21 +22,9 @@ def init():
     model = load_checkpoint_and_dispatch(
         model, "model.safetensors", device_map="auto"
     )
-
-    # set up boto3 client with credentials from environment variables
-    s3 = boto3.client(
-        "s3",
-        aws_access_key_id='rLSFjFbBD05D6cCkUX/o+nSKLs7e59lZUDjn1xY',
-        aws_secret_access_key='AKIAW3TGP7NQWXQWPN5L',
-    )
-
-    # get bucket from environment variable
-    bucket = 'banana-dev-holding-1'
    
     context = {
         "model": model,
-        "s3": s3,
-        "bucket": bucket,
         "processor": processor,
     }
 
@@ -49,12 +35,12 @@ def init():
 def handler(context: dict, request: Request) -> Response:
     device = get_device()
 
-    # get file path from request.json dict
-    path = request.json.get("path")
+    # get file URL from request.json dict
+    audio_url = request.json.get("audio_url")
     processor = context.get("processor")
 
-    # download file from bucket
-    context.get("s3").download_file(context.get("bucket"), path, "sample.wav")
+    # download file from the given URL
+    download_file_from_url(audio_url, "sample.wav")
 
     # open the stored file and convert to tensors
     input_features = processor(load_audio("sample.wav"), sampling_rate=16000, return_tensors="pt").input_features.to(device)
@@ -68,9 +54,16 @@ def handler(context: dict, request: Request) -> Response:
 
     # return output JSON to the client
     return Response(
-        json = {"outputs": transcription}, 
+        json={"outputs": transcription},
         status=200
     )
+
+# Implement a function to download file from the given URL
+def download_file_from_url(url, file_path):
+    response = requests.get(url, stream=True)
+    with open(file_path, 'wb') as file:
+        for chunk in response.iter_content(chunk_size=8192):
+            file.write(chunk)
 
 # Note that since this function doesn't have a decorator, it's not a handler
 def load_audio(audio_path):
@@ -82,15 +75,12 @@ def load_audio(audio_path):
     return speech.squeeze()
 
 def get_device():
-    
     if torch.cuda.is_available():
         device = torch.device("cuda")
         print("Running on CUDA")
-    
     elif torch.backends.mps.is_available():
         device = torch.device("mps")
         print("Running on MPS")
-    
     else:
         device = torch.device("cpu")
         print("Running on CPU")
