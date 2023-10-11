@@ -39,7 +39,7 @@ class WhisperSegment:
             "start": self.start,
             "end": self.end,
             "text": self.text,
-            "words": [{"word": word.word, "start": word.start, "end": word.end, "probability": word.probability} for word in self.words]
+            "words": [word.to_dict() for word in self.words]  # Convert WhisperWord instances to dictionaries
         }
 
 
@@ -89,14 +89,21 @@ def handler(context: dict, request: Request) -> Response:
     # convert the generated ids back to text
     transcription = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
 
+    print("Transcription:", transcription)
+
     # create WhisperWord objects for each word (dummy data for demonstration)
-    words_data = [{"word": word, "start": start, "end": end, "probability": 0.8} for word, (start, end) in enumerate(word_start_end_pairs(transcription))]
+    words_data = [WhisperWord(word=word, start=start, end=end, probability=0.8) for word, (start, end) in enumerate(word_start_end_pairs(transcription))]
+
+    print("words_data:", words_data)
 
     # create WhisperSegment object
     segment = WhisperSegment(id=1, start=0, end=len(transcription), text=transcription, words=words_data)
     segment_dict = segment.to_dict()
 
+    print("segment:", segment)
+    print("segment_dict:", segment_dict)
 
+    
     # return output JSON to the client
     return Response(
         json={"outputs": {"text": transcription, "segments": [segment_dict], "language": "english"}},
