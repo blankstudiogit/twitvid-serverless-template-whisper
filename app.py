@@ -5,6 +5,7 @@ from transformers import AutoProcessor, WhisperForConditionalGeneration, Whisper
 from accelerate import init_empty_weights, load_checkpoint_and_dispatch
 import torchaudio
 import requests
+from typing import List
 
 # create a new Potassium app
 app = Potassium("my_app")
@@ -70,7 +71,7 @@ def word_start_end_pairs(text: str) -> List[Tuple[str, Tuple[int, int]]]:
     words = text.split()
     word_start_end_pairs = [(word, (text.find(word), text.find(word) + len(word))) for word in words]
     return word_start_end_pairs
-    
+
 # Implement a function to download file from the given URL
 def download_file_from_url(url, file_path):
     response = requests.get(url, stream=True)
