@@ -89,14 +89,14 @@ def handler(context: dict, request: Request) -> Response:
     # run inference on the sample
     model = context.get("model")
     # Run the model
-    args = {
-        "language": None,
-        "patience": None,
-        "suppress_tokens": "-1",
-        "initial_prompt": None
-    }
+    # args = {
+    #     "language": None,
+    #     "patience": None,
+    #     "suppress_tokens": "-1",
+    #     "initial_prompt": None
+    # }
 
-    generated_ids = model.generate(inputs=input_features, **args)
+    generated_ids = model.generate(inputs=input_features)
     
     # convert the generated ids back to text
     transcription = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
