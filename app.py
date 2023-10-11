@@ -103,17 +103,18 @@ def handler(context: dict, request: Request) -> Response:
     print("segment:", segment)
     print("segment_dict:", segment_dict)
 
-    
+
     # return output JSON to the client
     return Response(
         json={"outputs": {"text": transcription, "segments": [segment_dict], "language": "english"}},
         status=200
     )
 
+import re
+
 def word_start_end_pairs(text: str) -> List[Tuple[str, Tuple[int, int]]]:
-    # This is a dummy function to generate word start and end positions for demonstration purposes.
-    # You might want to implement a proper word segmentation logic based on your use case.
-    words = text.split()
+    # Use regular expression to find all words in the text
+    words = re.findall(r'\b\w+\b', text)
     word_start_end_pairs = [(word, (text.find(word), text.find(word) + len(word))) for word in words]
     return word_start_end_pairs
 
