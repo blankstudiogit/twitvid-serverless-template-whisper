@@ -52,13 +52,25 @@ def handler(context: dict, request: Request) -> Response:
     # convert the generated ids back to text
     transcription = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
 
+    # create WhisperWord objects for each word (dummy data for demonstration)
+    words_data = [{"word": word, "start": start, "end": end, "probability": 0.8} for word, (start, end) in enumerate(word_start_end_pairs(transcription))]
+
+    # create WhisperSegment object
+    segment = WhisperSegment(id=1, start=0, end=len(transcription), text=transcription, words=words_data)
 
     # return output JSON to the client
     return Response(
-        json={"outputs": transcription},
+        json={"outputs": {"text": transcription, "segments": [segment], "language": "english"}},
         status=200
     )
 
+def word_start_end_pairs(text: str) -> List[Tuple[str, Tuple[int, int]]]:
+    # This is a dummy function to generate word start and end positions for demonstration purposes.
+    # You might want to implement a proper word segmentation logic based on your use case.
+    words = text.split()
+    word_start_end_pairs = [(word, (text.find(word), text.find(word) + len(word))) for word in words]
+    return word_start_end_pairs
+    
 # Implement a function to download file from the given URL
 def download_file_from_url(url, file_path):
     response = requests.get(url, stream=True)
