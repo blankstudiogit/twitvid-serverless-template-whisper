@@ -33,30 +33,23 @@ def init():
 # @app.handler runs for every call
 @app.handler()
 def handler(context: dict, request: Request) -> Response:
-    device = get_device()
-
-    # get file URL from request.json dict
+   device = get_device()
     audio_url = request.json.get("audio_url")
-    processor = context.get("processor")
+    processor = app.state.context.get("processor")
 
-    # download file from the given URL
     download_file_from_url(audio_url, "sample.wav")
-
-    # open the stored file and convert to tensors
     input_features = processor(load_audio("sample.wav"), sampling_rate=16000, return_tensors="pt").input_features.to(device)
-
-    # run inference on the sample
-    model = context.get("model")
+    model = app.state.context.get("model")
     generated_ids = model.generate(inputs=input_features)
-    
-    # convert the generated ids back to text
     transcription = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
 
+    return {"outputs": transcription}
+
     # return output JSON to the client
-    return Response(
-        json={"outputs": transcription},
-        status=200
-    )
+    # return Response(
+    #     json={"outputs": transcription},
+    #     status=200
+    # )
 
 # Implement a function to download file from the given URL
 def download_file_from_url(url, file_path):
