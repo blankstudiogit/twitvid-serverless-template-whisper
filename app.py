@@ -8,6 +8,8 @@ import requests
 from typing import Tuple, List
 import time
 import numpy as np
+import whisper
+import torch
 
 # create a new Potassium app
 app = Potassium("my_app")
@@ -15,20 +17,10 @@ app = Potassium("my_app")
 # @app.init runs at startup, and loads models into the app's context
 @app.init
 def init():
-    config = WhisperConfig.from_pretrained("openai/whisper-base")
-    processor = AutoProcessor.from_pretrained("openai/whisper-base")
-    
-    with init_empty_weights():
-        model = WhisperForConditionalGeneration(config)
-    model.tie_weights()
-
-    model = load_checkpoint_and_dispatch(
-        model, "model.safetensors", device_map="auto"
-    )
+    model = whisper.load_model("base")
    
     context = {
-        "model": model,
-        "processor": processor,
+        "model": model
     }
 
     return context
@@ -36,14 +28,10 @@ def init():
 # @app.handler runs for every call
 @app.handler()
 def handler(context: dict, request: Request) -> Response:
-    device = get_device()
-
     # get file URL from request.json dict
     audio_url = request.json.get("audio_url")
     if audio_url is None:
         raise ValueError("audio_url is required")
-
-    processor = context.get("processor")
 
     # download file from the given URL
     audio_path = download_audio_from_url(audio_url)
@@ -101,34 +89,7 @@ def download_audio_from_url(url):
 
     return filename
 
-# Implement a function to download file from the given URL
-def download_file_from_url(url, file_path):
-    response = requests.get(url, stream=True)
-    with open(file_path, 'wb') as file:
-        for chunk in response.iter_content(chunk_size=8192):
-            file.write(chunk)
-
-# Note that since this function doesn't have a decorator, it's not a handler
-def load_audio(audio_path):
-    """Loads audio file into tensor and resamples to 16kHz"""
-    speech, sr = torchaudio.load(audio_path)
-    resampler = torchaudio.transforms.Resample(sr, 16000)
-    speech = resampler(speech)
-    
-    return speech.squeeze()
-
-def get_device():
-    if torch.cuda.is_available():
-        device = torch.device("cuda")
-        print("Running on CUDA")
-    elif torch.backends.mps.is_available():
-        device = torch.device("mps")
-        print("Running on MPS")
-    else:
-        device = torch.device("cpu")
-        print("Running on CPU")
-
-    return device
-
 if __name__ == "__main__":
     app.serve()
+
+

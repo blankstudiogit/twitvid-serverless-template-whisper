@@ -3,17 +3,10 @@
 
 # In this example: A Huggingface BERT model
 
-from transformers import WhisperForConditionalGeneration, WhisperConfig, AutoProcessor
-from utils import custom_save
-
+import whisper
+import torch
 
 def download_model():
-    # do a dry run of loading the huggingface model, which will download weights & config objects
-    
-    processor = AutoProcessor.from_pretrained("openai/whisper-base")
-    config = WhisperConfig.from_pretrained("openai/whisper-base")
-    model = WhisperForConditionalGeneration.from_pretrained("openai/whisper-base")
-    custom_save(model)
-
+    model = whisper.load_model("base")
 if __name__ == "__main__":
     download_model()

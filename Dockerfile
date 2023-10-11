@@ -21,15 +21,6 @@ RUN python3 download.py
 # Add the rest of your code
 ADD . .
 
-# Set environment variables passed in during build
-ARG AWS_BUCKET
-ARG AWS_ACCESS_KEY_ID
-ARG AWS_SECRET_ACCESS_KEY
-
-ENV AWS_BUCKET=$AWS_BUCKET
-ENV AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
-ENV AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
-
 EXPOSE 8000
 
 # Start the app in the container
