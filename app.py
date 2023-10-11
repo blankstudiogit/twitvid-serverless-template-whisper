@@ -73,7 +73,7 @@ def handler(context: dict, request: Request) -> Response:
         "word_timestamps": True,
         "prepend_punctuations": "\"'“¿([{-",
         "append_punctuations": "\"'.。,，!！?？:：”)]}、"
-    } if args_overwrites is None else args_overwrites
+    }
     
     outputs = model.transcribe(str(audio_path), temperature=temperature, **args)
     start = time.time()
