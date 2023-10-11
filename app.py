@@ -6,42 +6,8 @@ from accelerate import init_empty_weights, load_checkpoint_and_dispatch
 import torchaudio
 import requests
 from typing import Tuple, List
-
-class WhisperWord:
-    def __init__(self, word: str, start: int, end: int, probability: float):
-        self.word = word
-        self.start = start
-        self.end = end
-        self.probability = probability
-
-    def to_dict(self):
-        return {
-            "word": self.word,
-            "start": self.start,
-            "end": self.end,
-            "probability": self.probability
-        }
-
-class WhisperSegment:
-    def __init__(self, id: int, start: int, end: int, text: str, words: List[WhisperWord] = None):
-        self.id = id
-        self.start = start
-        self.end = end
-        self.text = text
-        self.words = words or []
-
-    def add_word(self, word: WhisperWord):
-        self.words.append(word)
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "start": self.start,
-            "end": self.end,
-            "text": self.text,
-            "words": [word.to_dict() for word in self.words]  # Convert WhisperWord instances to dictionaries
-        }
-
+import time
+import numpy as np
 
 # create a new Potassium app
 app = Potassium("my_app")
@@ -74,49 +40,66 @@ def handler(context: dict, request: Request) -> Response:
 
     # get file URL from request.json dict
     audio_url = request.json.get("audio_url")
+    if audio_url is None:
+        raise ValueError("audio_url is required")
+
     processor = context.get("processor")
 
     # download file from the given URL
-    download_file_from_url(audio_url, "sample.wav")
-
-    # open the stored file and convert to tensors
-    input_features = processor(load_audio("sample.wav"), sampling_rate=16000, return_tensors="pt").input_features.to(device)
+    audio_path = download_audio_from_url(audio_url)
 
     # run inference on the sample
     model = context.get("model")
-    generated_ids = model.generate(inputs=input_features)
+
+    temperature = 0
+    temperature_increment_on_fallback = 0.2
+    if temperature_increment_on_fallback is not None:
+        temperature = tuple(
+            np.arange(temperature, 1.0 + 1e-6, temperature_increment_on_fallback)
+        )
+    else:
+        temperature = [temperature]
+
+    # Run the model
+    args = {
+        "language": None,
+        "patience": None,
+        "suppress_tokens": "-1",
+        "initial_prompt": None,
+        "condition_on_previous_text": True,
+        "compression_ratio_threshold": 2.4,
+        "logprob_threshold": -1.0,
+        "no_speech_threshold": 0.6,
+        "word_timestamps": True,
+        "prepend_punctuations": "\"'“¿([{-",
+        "append_punctuations": "\"'.。,，!！?？:：”)]}、"
+    } if args_overwrites is None else args_overwrites
     
-    # convert the generated ids back to text
-    transcription = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
+    outputs = model.transcribe(str(audio_path), temperature=temperature, **args)
+    start = time.time()
+    outputs = model.transcribe(str(audio_path), temperature=temperature, **args)
+    end = time.time()
 
-    print("Transcription:", transcription)
+    output = {"outputs": outputs}
+    os.remove(audio_path)
 
-    # create WhisperWord objects for each word (dummy data for demonstration)
-    words_data = [WhisperWord(word=word, start=start, end=end, probability=0.8) for word, (start, end) in enumerate(word_start_end_pairs(transcription))]
+    # Return the results as a dictionary
+    return output
 
-    print("words_data:", words_data)
+def download_audio_from_url(url):
+    # Extract the filename from the URL
+    filename = os.path.basename(url.split("?")[0])
 
-    # create WhisperSegment object
-    segment = WhisperSegment(id=1, start=0, end=len(transcription), text=transcription, words=words_data)
-    segment_dict = segment.to_dict()
+    # Download the audio file
+    response = requests.get(url, stream=True)
+    response.raise_for_status()
 
-    print("segment:", segment)
-    print("segment_dict:", segment_dict)
+    # Save the downloaded file
+    with open(filename, 'wb') as f:
+        for chunk in response.iter_content(chunk_size=8192):
+            f.write(chunk)
 
-
-    # return output JSON to the client
-    return Response(
-        json={"outputs": {"text": transcription, "segments": [segment_dict], "language": "english"}},
-        status=200
-    )
-
-import re
-
-def word_start_end_pairs(text: str) -> List[Tuple[str, Tuple[int, int]]]:
-    # Use regular expression to find all words in the text
-    words = re.findall(r'\b\w+\b', text)
-    word_start_end_pairs = [(word, (text.find(word), text.find(word) + len(word))) for word in words]
-    return word_start_end_pairs
+    return filename
 
 # Implement a function to download file from the given URL
 def download_file_from_url(url, file_path):
