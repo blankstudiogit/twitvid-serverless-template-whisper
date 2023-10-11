@@ -14,6 +14,14 @@ class WhisperWord:
         self.end = end
         self.probability = probability
 
+    def to_dict(self):
+        return {
+            "word": self.word,
+            "start": self.start,
+            "end": self.end,
+            "probability": self.probability
+        }
+
 class WhisperSegment:
     def __init__(self, id: int, start: int, end: int, text: str, words: List[WhisperWord] = None):
         self.id = id
@@ -31,8 +39,9 @@ class WhisperSegment:
             "start": self.start,
             "end": self.end,
             "text": self.text,
-            "words": [word.__dict__ for word in self.words]  # Convert WhisperWord objects to dictionaries
+            "words": [word.to_dict() for word in self.words]  # Convert WhisperWord objects to dictionaries
         }
+
 
 # create a new Potassium app
 app = Potassium("my_app")
