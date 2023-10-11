@@ -8,6 +8,8 @@ import requests
 from typing import Tuple, List
 import time
 import numpy as np
+from potassium import Potassium, Request, Response
+import boto3
 
 class WhisperWord:
     def __init__(self, word: str, start: int, end: int, probability: float):
