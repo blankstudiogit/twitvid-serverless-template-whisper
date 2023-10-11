@@ -20,10 +20,19 @@ class WhisperSegment:
         self.start = start
         self.end = end
         self.text = text
-        self.words = words or []  # Initialize words as an empty list if not provided
+        self.words = words or []
 
     def add_word(self, word: WhisperWord):
         self.words.append(word)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "start": self.start,
+            "end": self.end,
+            "text": self.text,
+            "words": [word.__dict__ for word in self.words]  # Convert WhisperWord objects to dictionaries
+        }
 
 # create a new Potassium app
 app = Potassium("my_app")
