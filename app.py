@@ -89,7 +89,7 @@ def handler(context: dict, request: Request) -> Response:
 
 
     # return output JSON to the client
-     return Response(
+    return Response(
         json={"outputs": {"text": transcription, "segments": [segment_dict], "language": "english"}},
         status=200
     )
