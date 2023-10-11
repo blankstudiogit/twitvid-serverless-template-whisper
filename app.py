@@ -84,7 +84,22 @@ def handler(context: dict, request: Request) -> Response:
 
     # run inference on the sample
     model = context.get("model")
-    generated_ids = model.generate(inputs=input_features)
+    # Run the model
+    args = {
+        "language": None,
+        "patience": None,
+        "suppress_tokens": "-1",
+        "initial_prompt": None,
+        "condition_on_previous_text": True,
+        "compression_ratio_threshold": 2.4,
+        "logprob_threshold": -1.0,
+        "no_speech_threshold": 0.6,
+        "word_timestamps": True,
+        "prepend_punctuations": "\"'“¿([{-",
+        "append_punctuations": "\"'.。,，!！?？:：”)]}、"
+    }
+
+    generated_ids = model.generate(inputs=input_features, **args)
     
     # convert the generated ids back to text
     transcription = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
