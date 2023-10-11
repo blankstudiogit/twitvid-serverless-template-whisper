@@ -1,9 +1,6 @@
 from potassium import Potassium, Request, Response
 import torch
 import os
-from transformers import AutoProcessor, WhisperForConditionalGeneration, WhisperConfig
-from accelerate import init_empty_weights, load_checkpoint_and_dispatch
-import torchaudio
 import requests
 from typing import Tuple, List
 import time
