@@ -85,10 +85,12 @@ def handler(context: dict, request: Request) -> Response:
 
     # create WhisperSegment object
     segment = WhisperSegment(id=1, start=0, end=len(transcription), text=transcription, words=words_data)
+    segment_dict = segment.to_dict()
+
 
     # return output JSON to the client
-    return Response(
-        json={"outputs": {"text": transcription, "segments": [segment], "language": "english"}},
+     return Response(
+        json={"outputs": {"text": transcription, "segments": [segment_dict], "language": "english"}},
         status=200
     )
 
